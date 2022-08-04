@@ -1,11 +1,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct RGB {
     int r;
     int g;
     int b;
+    int last;
 };
 
 void rgb_set(struct RGB *rgb, int r, int g, int b) {
@@ -30,18 +32,60 @@ char *rgb_str(struct RGB *rgb) {
     return str;
 }
 
-int main(int argc, char **argv){
-    // if (argc != 2) {
-    //     printf("Uso: rgb fichero\n");
-    //     exit(-1);
-    // }
+struct RGB *get_inverted_colors(char *file) {
+    int limit = 4;
+    struct RGB *inverted = malloc(sizeof(struct RGB) * limit);
 
-    struct RGB *rgb = malloc(sizeof(struct RGB));
-    rgb->r = 0;
-    rgb->g = 0;
-    rgb->b = 0;
-    printf("%s\n", rgb_str(rgb));
-    rgb_invert(rgb);
-    printf("%s\n", rgb_str(rgb));
-    free(rgb);
+    int line_size = 16;
+    char *line = malloc(sizeof(char) * line_size);
+
+    FILE *f = fopen(file, "r");
+
+    int i = 0;
+    while (fgets(line, line_size, f)) {
+        if (i >= limit - 1) {
+           limit *= 2;
+           inverted = realloc(inverted, sizeof(struct RGB) * limit);
+        }
+
+        int values[3];
+        char *split = strdup(line);
+
+        for (int i = 0; i < 3; i++) {
+            values[i] = atoi(strsep(&split, " "));
+        }
+
+        free(split);
+
+        rgb_set(&inverted[i], values[0], values[1], values[2]);
+        // 0 = False
+        inverted[i].last = 0;
+        rgb_invert(&inverted[i++]);
+    }
+
+    inverted[i].last = 1;
+
+    free(line);
+    fclose(f);
+
+    return inverted;
+}
+
+int main(int argc, char **argv){
+    if (argc != 2) {
+        printf("Uso: rgb fichero\n");
+        exit(-1);
+    }
+
+    struct RGB *inverted = get_inverted_colors(argv[1]);
+
+    for (int i = 0; !inverted[i].last; i++) {
+        char *s = rgb_str(&inverted[i]);
+        printf("%s\n\n", s);
+        free(s);
+    }
+
+    free(inverted);
+
+    get_inverted_colors(argv[1]);
 }
