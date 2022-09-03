@@ -25,6 +25,7 @@ void *create_files(void *id_pointer) {
         // 1 = 001
         sprintf(file, "%s/%s%03i.%s", path, name, i + 1, extension);
         FILE *f = fopen(file, "w");
+        // \033[01;33m for change de prompt color 
         printf("Hilo \033[01;33m%i\033[0m ha creado el fichero \033[01;34m%s\033[0m\n", id, file);
         fclose(f);
     }
